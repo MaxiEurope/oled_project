@@ -5,14 +5,29 @@
 
 SSD1351_FONT current_font;
 
+/**
+ * @brief Selects the SSD1351 display.
+ *
+ * This function sets the CS (Chip Select) pin of the SSD1351 display to low,
+ * enabling communication with the display.
+ */
 void SSD1351_Select() {
     HAL_GPIO_WritePin(SSD1351_CS_PORT, SSD1351_CS_PIN, GPIO_PIN_RESET);
 }
 
+/**
+ * @brief Deselects the SSD1351 display.
+ */
 void SSD1351_Deselect() {
     HAL_GPIO_WritePin(SSD1351_CS_PORT, SSD1351_CS_PIN, GPIO_PIN_SET);
 }
 
+/**
+ * @brief Reset the SSD1351 display.
+ *
+ * This function resets the SSD1351 display by toggling the reset pin.
+ * The reset pin is set to high, then low, then high again with delays in between.
+ */
 static void SSD1351_Reset() {
     HAL_GPIO_WritePin(SSD1351_RST_PORT, SSD1351_RST_PIN, GPIO_PIN_SET);
     HAL_Delay(50);
@@ -22,11 +37,27 @@ static void SSD1351_Reset() {
     HAL_Delay(10);
 }
 
+/**
+ * @brief Sends a command to the SSD1351 display.
+ *
+ * This function is used to send a command to the SSD1351 display. It sets the DC (Data/Command) pin to low to indicate that a command is being sent, and then transmits the command using SPI communication.
+ *
+ * @param cmd The command to be sent to the display.
+ */
 static void SSD1351_Command(uint8_t cmd) {
     HAL_GPIO_WritePin(SSD1351_DC_PORT, SSD1351_DC_PIN, GPIO_PIN_RESET);
     HAL_SPI_Transmit(&SSD1351_SPI, &cmd, sizeof(cmd), HAL_MAX_DELAY);
 }
 
+/**
+ * @brief Transmits data to the SSD1351 display.
+ *
+ * This function is responsible for transmitting data to the SSD1351 display using SPI communication.
+ * It sets the data/command pin to high and transmits the data in chunks of 32 bytes or less.
+ *
+ * @param data Pointer to the data buffer to be transmitted.
+ * @param size Size of the data buffer in bytes.
+ */
 static void SSD1351_Data(uint8_t *data, size_t size) {
     HAL_GPIO_WritePin(SSD1351_DC_PORT, SSD1351_DC_PIN, GPIO_PIN_SET);
 
@@ -38,6 +69,12 @@ static void SSD1351_Data(uint8_t *data, size_t size) {
     }
 }
 
+/**
+ * @brief Initializes the SSD1351 display.
+ *
+ * This function selects the SSD1351 display, performs a reset, and sends the necessary commands to initialize the display.
+ * It turns off the display, sets the display mode to normal, and turns on the display.
+ */
 void SSD1351_Init() {
     SSD1351_Select();
     SSD1351_Reset();
@@ -48,6 +85,14 @@ void SSD1351_Init() {
     SSD1351_Command(SSD1351_DISPLAY_ON);
 }
 
+/**
+ * Sets the window for drawing on the SSD1351 display.
+ *
+ * @param x The starting x-coordinate of the window.
+ * @param y The starting y-coordinate of the window.
+ * @param w The width of the window.
+ * @param h The height of the window.
+ */
 static void SSD1351_SetWindow(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
     int column_offset = (128 - SSD1351_WIDTH) / 2;
 
@@ -60,6 +105,16 @@ static void SSD1351_SetWindow(uint8_t x, uint8_t y, uint8_t w, uint8_t h) {
     SSD1351_Command(SSD1351_WRITE_RAM);
 }
 
+/**
+ * @brief Draws a pixel on the SSD1351 OLED display.
+ *
+ * This function draws a pixel at the specified coordinates with the specified color on the SSD1351 OLED display.
+ * If the coordinates are outside the display boundaries, the function returns without drawing anything.
+ *
+ * @param x The x-coordinate of the pixel.
+ * @param y The y-coordinate of the pixel.
+ * @param color The color of the pixel in RGB565 format.
+ */
 void SSD1351_DrawPixel(uint8_t x, uint8_t y, uint16_t color) {
     if (x >= SSD1351_WIDTH || y >= SSD1351_HEIGHT) {
         return;
@@ -73,6 +128,15 @@ void SSD1351_DrawPixel(uint8_t x, uint8_t y, uint16_t color) {
     SSD1351_Deselect();
 }
 
+/**
+ * Fills a rectangular area on the SSD1351 display with a specified color.
+ *
+ * @param x The x-coordinate of the top-left corner of the rectangle.
+ * @param y The y-coordinate of the top-left corner of the rectangle.
+ * @param w The width of the rectangle.
+ * @param h The height of the rectangle.
+ * @param color The color to fill the rectangle with.
+ */
 void SSD1351_FillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color) {
     if (x >= SSD1351_WIDTH || y >= SSD1351_HEIGHT) {
         return;
@@ -99,14 +163,33 @@ void SSD1351_FillRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color
     SSD1351_Deselect();
 }
 
+/**
+ * @brief Fills the entire screen with the specified color.
+ *
+ * This function fills the entire screen of the SSD1351 display with the specified color.
+ *
+ * @param color The color to fill the screen with.
+ */
 void SSD1351_FillScreen(uint16_t color) {
     SSD1351_FillRect(0, 0, SSD1351_WIDTH, SSD1351_HEIGHT, color);
 }
 
+/**
+ * @brief Clears the SSD1351 display by filling it with the color black.
+ */
 void SSD1351_Clear() {
     SSD1351_FillScreen(0);
 }
 
+/**
+ * Draws a line on the SSD1351 OLED display.
+ *
+ * @param x0 The starting x-coordinate of the line.
+ * @param y0 The starting y-coordinate of the line.
+ * @param x1 The ending x-coordinate of the line.
+ * @param y1 The ending y-coordinate of the line.
+ * @param color The color of the line.
+ */
 void SSD1351_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color) {
     if (x0 >= SSD1351_WIDTH || y0 >= SSD1351_HEIGHT || x1 >= SSD1351_WIDTH || y1 >= SSD1351_HEIGHT) {
         return;
@@ -144,6 +227,19 @@ void SSD1351_DrawLine(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t c
     }
 }
 
+/**
+ * @brief Draws a rectangle on the SSD1351 OLED display.
+ *
+ * This function draws a rectangle with the specified position, width, height, and color on the SSD1351 OLED display.
+ * If the specified position is outside the display boundaries, the function does nothing.
+ * If the rectangle extends beyond the display boundaries, it is automatically clipped to fit within the boundaries.
+ *
+ * @param x The x-coordinate of the top-left corner of the rectangle.
+ * @param y The y-coordinate of the top-left corner of the rectangle.
+ * @param w The width of the rectangle.
+ * @param h The height of the rectangle.
+ * @param color The color of the rectangle.
+ */
 void SSD1351_DrawRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color) {
     if (x >= SSD1351_WIDTH || y >= SSD1351_HEIGHT) {
         return;
@@ -167,6 +263,13 @@ void SSD1351_DrawRect(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint16_t color
     SSD1351_DrawLine(x, y + h, x, y, color);
 }
 
+/**
+ * @brief Sets the font for the SSD1351 display.
+ *
+ * This function sets the font to be used for rendering text on the SSD1351 display.
+ *
+ * @param font A pointer to the font data.
+ */
 void SSD1351_SetFont(const uint8_t* font) {
     current_font.data = font;
     current_font.height = font[6];
@@ -174,6 +277,18 @@ void SSD1351_SetFont(const uint8_t* font) {
     current_font.end_char = font[4] + (font[5] << 8);
 }
 
+/**
+ * @brief Draws a character on the SSD1351 display.
+ *
+ * This function draws a character on the SSD1351 display at the specified coordinates (x, y) using the specified color and background color.
+ * The character must be within the range of the current font's start and end characters, otherwise nothing will be drawn.
+ *
+ * @param x The x-coordinate of the top-left corner of the character.
+ * @param y The y-coordinate of the top-left corner of the character.
+ * @param c The character to be drawn.
+ * @param color The color of the character.
+ * @param bg The background color behind the character.
+ */
 void SSD1351_DrawChar(uint8_t x, uint8_t y, char c, uint16_t color, uint16_t bg) {
     if (c < current_font.start_char || c > current_font.end_char) {
         return;
@@ -199,12 +314,21 @@ void SSD1351_DrawChar(uint8_t x, uint8_t y, char c, uint16_t color, uint16_t bg)
     }
 }
 
+/**
+ * @brief Draws a string on the SSD1351 OLED display.
+ *
+ * This function draws a string on the SSD1351 OLED display at the specified coordinates (x, y).
+ * The string is specified by the input parameter 'str'. The color of the string and the background
+ * color can also be specified using the 'color' and 'bg' parameters, respectively.
+ *
+ * @param x The x-coordinate of the starting position of the string.
+ * @param y The y-coordinate of the starting position of the string.
+ * @param str The string to be drawn on the display.
+ * @param color The color of the string.
+ * @param bg The background color.
+ */
 void SSD1351_DrawString(uint8_t x, uint8_t y, const char* str, uint16_t color, uint16_t bg) {
-    if (!str) {
-        return;
-    }
-
-    if (x >= SSD1351_WIDTH || y >= SSD1351_HEIGHT) {
+    if (!str || x >= SSD1351_WIDTH || y >= SSD1351_HEIGHT) {
         return;
     }
 
@@ -234,6 +358,16 @@ void SSD1351_DrawString(uint8_t x, uint8_t y, const char* str, uint16_t color, u
     }
 }
 
+/**
+ * @brief Calculates the width of a string in pixels.
+ *
+ * This function calculates the width of a string in pixels based on the current font.
+ * It iterates through each character in the string and checks if it falls within the range of the current font.
+ * If the character is within the range, it adds the width of the character to the total width.
+ *
+ * @param str The string for which to calculate the width.
+ * @return The width of the string in pixels.
+ */
 uint8_t SSD1351_GetStringWidth(const char* str) {
     if (!str) {
         return 0;
@@ -256,6 +390,14 @@ uint8_t SSD1351_GetStringWidth(const char* str) {
     return width;
 }
 
+/**
+ * Draws a string centered on the display.
+ *
+ * @param y The y-coordinate of the string.
+ * @param str The string to be drawn.
+ * @param color The color of the string.
+ * @param bg The background color.
+ */
 void SSD1351_DrawStringCentered(uint8_t y, const char* str, uint16_t color, uint16_t bg) {
     if (!str || y >= SSD1351_HEIGHT) {
         return;

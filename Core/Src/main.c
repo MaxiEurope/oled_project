@@ -116,9 +116,9 @@ int main(void)
   SSD1351_Init();
 
   SSD1351_Clear();
-	SSD1351_SetFont(guiFont_Tahoma_7_Regular);
+  SSD1351_SetFont(guiFont_Tahoma_7_Regular);
 
-	HAL_TIM_PeriodElapsedCallback(&htim7);
+  HAL_TIM_PeriodElapsedCallback(&htim7);
   /* USER CODE END 2 */
 
   /* Infinite loop */
