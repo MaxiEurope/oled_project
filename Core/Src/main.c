@@ -4,7 +4,12 @@
   * @file           : main.c
   * @brief          : Main program body
   ******************************************************************************
+  * This project is developed for the STM32 MCU, interfacing with an OLED display (SSD1351) to visualize analog input from a potentiometer using ADC, with SPI communication for the display and UART for debugging.
+  * The potentiometer's value is captured every 10 seconds using a timer interrupt, converted to the corresponding PWM value, and then displayed as a color.
+  * The display shows the closest named color, the RGB values, and the hex value of the color.
   * @attention
+  *
+  * @author         : Maximilian Melcher
   *
   * Copyright (c) 2024 STMicroelectronics.
   * All rights reserved.
